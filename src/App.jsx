@@ -1,11 +1,14 @@
 import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
+import ServerGate from "./components/ServerGate";
 
 function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <ServerGate>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
+    </ServerGate>
   );
 }
 

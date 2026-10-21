@@ -46,6 +46,11 @@ button:disabled {
 }
 
 .anim-fade { animation: fade-in 350ms var(--ease) both; }
+
+@keyframes loadbar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
 .anim-pop { animation: pop-in 400ms var(--ease) both; }
 .anim-rise { animation: rise-in 500ms var(--ease) both; }
 
