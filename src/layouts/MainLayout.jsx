@@ -1,89 +1,50 @@
 import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import {
-  getActivities,
-  getTaskSummary,
-  getTasks,
-} from "../features/task/taskApi";
-import {
-  setActivities,
-  setTaskSummary,
-  setTasks,
-} from "../features/task/taskSlice";
-import { getUsers } from "../features/user/userApi";
-import { setUsers } from "../features/user/userSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { Outlet } from "react-router-dom";
 import Sidebar from "../components/SIdebar";
 import Navbar from "../components/Navbar";
-import { Outlet } from "react-router-dom";
+import { ToastProvider } from "../components/ui/Toast";
+import { getCurrentUser } from "../features/auth/authApi";
+import { setUser } from "../features/auth/authSlice";
+import { loadAppData } from "../features/loadAppData";
 
 function MainLayout() {
   const dispatch = useDispatch();
-
-  const filters = {
-    // Define default filter values
-    page: 1,
-    limit: 10,
-    sort: "-createdAt",
-    findBy: "",
-    search: "",
-  };
+  const role = useSelector((state) => state.auth.user?.userRole);
 
   useEffect(() => {
-    const loadInitialData = async () => {
+    const init = async () => {
+      if (!localStorage.getItem("token")) return;
+      let currentRole = role;
       try {
-        const token = localStorage.getItem("token");
-
-        if (!token) return;
-
-        const [summaryRes, tasksRes, usersRes, activitiesRes] =
-          await Promise.all([
-            getTaskSummary(),
-            getTasks(filters),
-            getUsers(),
-            getActivities(),
-          ]);
-
-        console.log("This is Activities: ", activitiesRes);
-
-        if (summaryRes?.pagination) {
-          dispatch(
-            setTaskSummary({
-              summary: summaryRes.pagination,
-            }),
-          );
-        }
-
-        if (tasksRes?.data) {
-          dispatch(setTasks(tasksRes.data));
-        }
-
-        if (activitiesRes?.data) {
-          dispatch(setActivities(activitiesRes.data));
-        }
-
-        if (usersRes?.data) {
-          dispatch(setUsers(usersRes.data));
+        const me = await getCurrentUser();
+        if (me?.data) {
+          currentRole = me.data.userRole;
+          localStorage.setItem("data", JSON.stringify(me.data));
+          dispatch(setUser({ user: me.data }));
         }
       } catch (error) {
-        console.error("Error loading initial data:", error);
+        console.error("Could not refresh the current user:", error);
       }
+      await loadAppData(dispatch, currentRole);
     };
-
-    loadInitialData();
+    init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
   return (
-    <div className="flex">
-      <Sidebar />
-
-      <div className="flex-1">
-        <Navbar />
-
-        <Outlet />
+    <ToastProvider>
+      <div className="min-h-screen bg-slate-50 text-slate-900">
+        <Sidebar />
+        <div className="pl-64">
+          <Navbar />
+          <main className="mx-auto max-w-[1500px] p-8">
+            <Outlet />
+          </main>
+        </div>
       </div>
-    </div>
+    </ToastProvider>
   );
 }
 
 export default MainLayout;
-// export default MainLayout

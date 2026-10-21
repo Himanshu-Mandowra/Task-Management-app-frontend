@@ -1,111 +1,98 @@
+import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { loginSuccess } from "../features/auth/authSlice";
-import { loginUser } from "../features/auth/authApi";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
+import { CheckSquare, ClipboardList, ShieldCheck, Users } from "lucide-react";
+import { loginSuccess } from "../features/auth/authSlice";
+import { loginUser } from "../features/auth/authApi";
+import { errorMessage } from "../features/http";
+
+const inputClass =
+  "w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 
 function Login() {
   const { register, handleSubmit } = useForm();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (data) => {
+    setError("");
+    setLoading(true);
     try {
-      console.log(data);
       const res = await loginUser(data);
-
-      dispatch(
-        loginSuccess({
-          user: res.data,
-          token: res.token,
-        }),
-      );
-      console.log(res.data);
       localStorage.setItem("token", res.token);
-      localStorage.setItem("data", JSON.stringify(res.data)); // Best practice: stringify objects before saving
+      localStorage.setItem("data", JSON.stringify(res.data));
+      dispatch(loginSuccess({ user: res.data, token: res.token }));
       navigate("/");
-    } catch (error) {
-      console.error("Login failed:", error);
+    } catch (err) {
+      setError(errorMessage(err, "Login failed. Please check your details."));
+    } finally {
+      setLoading(false);
     }
   };
 
+  const highlights = [
+    { icon: ClipboardList, text: "Create and assign tasks in a few clicks" },
+    { icon: Users, text: "See which teammates are overloaded or overdue" },
+    { icon: ShieldCheck, text: "Admins manage their own users securely" },
+  ];
+
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      {/* LEFT SECTION: Login Form */}
+    <div className="flex min-h-screen bg-slate-50">
       <div className="flex w-full items-center justify-center px-6 lg:w-1/2 xl:px-12">
-        <div className="w-full max-w-md space-y-8">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              Welcome back
-            </h1>
-            <p className="mt-2 text-sm text-gray-600">
-              Please enter your details to sign in to your account.
-            </p>
+        <div className="anim-rise w-full max-w-md space-y-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-white">
+              <CheckSquare size={22} strokeWidth={2.5} />
+            </div>
+            <span className="text-lg font-bold text-slate-900">TaskMaster</span>
           </div>
 
-          <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Welcome back</h1>
+            <p className="mt-2 text-sm text-slate-500">Sign in to manage your tasks and team.</p>
+          </div>
+
+          <form onSubmit={handleSubmit(handleLogin)} className="space-y-5">
+            {error && (
+              <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                {error}
+              </div>
+            )}
             <div>
-              <label className="block text-sm text-left font-semibold text-gray-700 mb-2">
-                Email Address
-              </label>
-              <input
-                type="email"
-                required
-                {...register("email")}
-                placeholder="you@example.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400"
-              />
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">Email</label>
+              <input type="email" required {...register("email")} placeholder="you@company.com" className={inputClass} />
             </div>
-
             <div>
-              <label className="block text-left text-sm font-semibold text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                required
-                {...register("password")}
-                placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 placeholder-gray-400"
-              />
+              <label className="mb-1.5 block text-sm font-semibold text-slate-700">Password</label>
+              <input type="password" required {...register("password")} placeholder="Your password" className={inputClass} />
             </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center space-x-2 text-gray-600 cursor-pointer">
-                <input type="checkbox" className="rounded text-blue-600 focus:ring-blue-500" />
-                <span>Remember me</span>
-              </label>
-              <a href="#" className="font-medium text-blue-600 hover:underline">
-                Forgot password?
-              </a>
-            </div>
-
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-medium hover:bg-blue-700 active:scale-[0.98] transition-all duration-150 shadow-md shadow-blue-500/20"
+              disabled={loading}
+              className="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-700"
             >
-              Sign In
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
         </div>
       </div>
 
-      {/* RIGHT SECTION: Info & Title Panel */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-tr from-blue-700 via-blue-600 to-indigo-800 p-12 items-center justify-center text-white overflow-hidden">
-        {/* Subtle decorative background shapes */}
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-2xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-2xl" />
-        
-        <div className="max-w-md space-y-6 relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold tracking-wider uppercase">
-            🚀 New Version 2.0
-          </div>
-          <h2 className="text-4xl font-bold leading-tight">
-            Manage your entire workspace in one place.
-          </h2>
-          <p className="text-blue-100 text-lg leading-relaxed">
-            Join thousands of professionals who streamline their daily workflow, track real-time metrics, and scale production seamlessly.
-          </p>
+      <div className="hidden items-center justify-center bg-blue-600 p-12 text-white lg:flex lg:w-1/2">
+        <div className="max-w-md space-y-8">
+          <h2 className="text-4xl font-bold leading-tight">Everything your team needs to stay on track.</h2>
+          <ul className="space-y-4">
+            {highlights.map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-center gap-4 text-blue-50">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-700">
+                  <Icon size={20} />
+                </span>
+                {text}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

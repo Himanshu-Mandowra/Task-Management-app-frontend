@@ -1,18 +1,22 @@
-import axios from "axios";
+import { userHttp } from "../http";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
-
+// Users that belong to the logged in admin
 export const getUsers = async () => {
-  const token = localStorage.getItem("token");
-  console.log("this is base URL: ", BASE_URL);
+  const response = await userHttp.get("");
+  return response.data;
+};
 
-  const response = await axios.get(BASE_URL, {
-    headers: {
-      Authorization: token,
-    },
-  });
+export const getUserById = async (userId) => {
+  const response = await userHttp.get(`/${userId}`);
+  return response.data;
+};
 
-  console.log("This is Response form api file: ", response);
+export const updateUser = async (userId, data) => {
+  const response = await userHttp.post(`/update/${userId}`, data);
+  return response.data;
+};
 
+export const deleteUser = async (userId) => {
+  const response = await userHttp.delete(`/delete/${userId}`);
   return response.data;
 };

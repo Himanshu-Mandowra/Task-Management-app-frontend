@@ -1,9 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const readStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("data"));
+  } catch {
+    return null;
+  }
+};
+
+const storedToken = localStorage.getItem("token");
+
 const initialState = {
-  user: null,
-  token: null,
-  isLoggedIn: false,
+  user: storedToken ? readStoredUser() : null,
+  token: storedToken,
+  isLoggedIn: Boolean(storedToken),
 };
 
 const authSlice = createSlice({
@@ -39,3 +49,4 @@ const authSlice = createSlice({
 export const { loginSuccess, logout, setUser } = authSlice.actions;
 
 export default authSlice.reducer;
+
